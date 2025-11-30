@@ -27,7 +27,7 @@ function CreateCabinForm() {
   });
 
   function onSubmit(formData) {
-    mutate(formData);
+    mutate({...formData, image: formData.image[0]});
   }
 
   function onError(errors) {
@@ -88,7 +88,7 @@ function CreateCabinForm() {
               value: "1",
               message: "Giá khuyến mãi phải lớn hơn 0",
             },
-            validate: (value) => Number.parseFloat(value) <= Number.parseFloat(getValues().regularPrice) || 'Giá khuyến mãi phải nhỏ hơn giá bán',
+            validate: (value) => Number.parseFloat(value) < Number.parseFloat(getValues().regularPrice) || 'Giá khuyến mãi phải nhỏ hơn giá bán',
           })}
           disabled={isCreating}
         />
@@ -106,7 +106,7 @@ function CreateCabinForm() {
       </FormRow>
 
       <FormRow lable="Ảnh phòng" error={errors?.image?.message}>
-        <FileInput id="image" accept="image/*" />
+        <FileInput id="image" accept="image/*" {...register("image")}/>
       </FormRow>
 
       <FormRow>
