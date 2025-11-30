@@ -6,6 +6,9 @@ import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createCarbin } from "../../services/apiCabins";
+import toast from "react-hot-toast";
 
 const FormRow = styled.div`
   display: grid;
@@ -44,17 +47,32 @@ const Error = styled.span`
 `;
 
 function CreateCabinForm() {
-  const { register, handleSubmit} = useForm();
-  
+  const { register, handleSubmit, reset } = useForm();
+
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending: isCreating } = useMutation({
+    mutationFn: createCarbin,
+    onSuccess: () => {
+      toast.success("Tạo mới Carbin thành công")
+      queryClient.invalidateQueries({
+        queryKey: ["carbins"],
+      })
+      reset()
+    },
+    onError: (err) => toast.error(err.message)
+  });
+
+
   function onSubmit(formData) {
-    console.log(formData);
-    
+    mutate(formData)
   }
+  
   return (
     <Form onSubmit={handleSubmit(onSubmit)}>
       <FormRow>
         <Label htmlFor="name">Tên phòng</Label>
-        <Input type="text" id="name" {...register("name")}/>
+        <Input type="text" id="name" {...register("name")} />
       </FormRow>
 
       <FormRow>
@@ -69,12 +87,21 @@ function CreateCabinForm() {
 
       <FormRow>
         <Label htmlFor="discount">Giảm giá</Label>
-        <Input type="number" id="discount" defaultValue={0} {...register("discount")} />
+        <Input
+          type="number"
+          id="discount"
+          defaultValue={0}
+          {...register("discount")}
+        />
       </FormRow>
 
       <FormRow>
         <Label htmlFor="description">Mô tả hiển thị trên website</Label>
-        <Textarea id="description" defaultValue="" {...register("description")}/>
+        <Textarea
+          id="description"
+          defaultValue=""
+          {...register("description")}
+        />
       </FormRow>
 
       <FormRow>
@@ -86,11 +113,10 @@ function CreateCabinForm() {
         <Button variation="secondary" type="reset">
           Hủy
         </Button>
-        <Button>Cập nhật phòng</Button>
+        <Button disabled={isCreating}>Cập nhật phòng</Button>
       </FormRow>
     </Form>
   );
-
 }
 
 export default CreateCabinForm;
