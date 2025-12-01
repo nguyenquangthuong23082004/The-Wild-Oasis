@@ -8,7 +8,7 @@ function useEditCabin() {
   const { mutate: editCabin, isPending: isEditing } = useMutation({
     mutationFn: ({ newCabinData, id }) => createEditCarbin(newCabinData, id),
     onSuccess: () => {
-      toast.success("Cập cập cabin thành công");
+      toast.success("Cập nhật cabin thành công");
       queryClient.invalidateQueries({
         queryKey: ["carbins"],
       });
