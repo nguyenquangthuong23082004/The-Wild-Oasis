@@ -68,7 +68,7 @@ npm run build
 
 - [x] Khởi tạo project (base scaffold)
 - [x] Thiết kế UI cơ bản
-- [ ] Tạo modules cabins
+- [x] Tạo modules cabins
 - [ ] Tạo modules bookings
 - [ ] Tích hợp React Query
 - [ ] Tối ưu performance

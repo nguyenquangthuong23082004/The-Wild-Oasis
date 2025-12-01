@@ -1,39 +1,54 @@
+import { useForm } from "react-hook-form";
+import useCreateCabin from "./useCreateCabin";
+import useEditCabin from "./useEditCabin";
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
 import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
-import FormRow from "../../ui/FormRow"
-import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createCarbin } from "../../services/apiCabins";
-import toast from "react-hot-toast";
+import FormRow from "../../ui/FormRow";
 
-function CreateCabinForm() {
-  const { register, handleSubmit, reset, getValues, formState } = useForm();
-  const { errors } = formState;  
-  const queryClient = useQueryClient();
+function CreateCabinForm({ cabinToEdit = {} }) {
+  const { creatCabin, isCreating } = useCreateCabin();
+  const {editCabin, isEditing} = useEditCabin();
 
-  const { mutate, isPending: isCreating } = useMutation({
-    mutationFn: createCarbin,
-    onSuccess: () => {
-      toast.success("Tạo mới Carbin thành công");
-      queryClient.invalidateQueries({
-        queryKey: ["carbins"],
-      });
-      reset();
-    },
-    onError: (err) => toast.error(err.message),
+  const isWorking = isCreating || isEditing;
+
+  const { id: editId, ...editValue } = cabinToEdit;
+  const isEditSession = Boolean(editId);
+
+  const { register, handleSubmit, reset, getValues, formState } = useForm({
+    defaultValues: isEditSession ? editValue : {},
   });
+  const { errors } = formState;
 
   function onSubmit(formData) {
-    mutate({...formData, image: formData.image[0]});
+    const image =
+      typeof formData.image === "string" ? formData.image : formData.image[0];
+
+    if (isEditSession) {
+      editCabin(
+        { newCabinData: { ...formData, image: image }, id: editId },
+        {
+          onSuccess: () => {
+            reset();
+          },
+        }
+      );
+    } else {
+      creatCabin(
+        { ...formData, image: image },
+        {
+          onSuccess: () => {
+            reset();
+          },
+        }
+      );
+    }
   }
 
-  function onError(errors) {
-    
-  }
-  
+  function onError(errors) {}
+
   return (
     <Form onSubmit={handleSubmit(onSubmit, onError)}>
       <FormRow lable="Tên carbin" error={errors?.name?.message}>
@@ -43,7 +58,7 @@ function CreateCabinForm() {
           {...register("name", {
             required: "Trường này là bắt buộc",
           })}
-          disabled={isCreating}
+          disabled={isWorking}
         />
       </FormRow>
 
@@ -58,7 +73,7 @@ function CreateCabinForm() {
               message: "Sức chứa phải lớn hơn hoặc bằng 1",
             },
           })}
-          disabled={isCreating}
+          disabled={isWorking}
         />
       </FormRow>
 
@@ -73,7 +88,7 @@ function CreateCabinForm() {
               message: "Giá phải lớn hơn 0",
             },
           })}
-          disabled={isCreating}
+          disabled={isWorking}
         />
       </FormRow>
 
@@ -88,32 +103,44 @@ function CreateCabinForm() {
               value: "1",
               message: "Giá khuyến mãi phải lớn hơn 0",
             },
-            validate: (value) => Number.parseFloat(value) < Number.parseFloat(getValues().regularPrice) || 'Giá khuyến mãi phải nhỏ hơn giá bán',
+            validate: (value) =>
+              Number.parseFloat(value) <
+                Number.parseFloat(getValues().regularPrice) ||
+              "Giá khuyến mãi phải nhỏ hơn giá bán",
           })}
-          disabled={isCreating}
+          disabled={isWorking}
         />
       </FormRow>
 
-      <FormRow lable="Mô tả hiển thị trên website" error={errors?.description?.message}>
+      <FormRow
+        lable="Mô tả hiển thị trên website"
+        error={errors?.description?.message}
+      >
         <Textarea
           id="description"
           defaultValue=""
           {...register("description", {
-            required: "Trường này là bắt buộc"
+            required: "Trường này là bắt buộc",
           })}
-          disabled={isCreating}
+          disabled={isWorking}
         />
       </FormRow>
 
       <FormRow lable="Ảnh phòng" error={errors?.image?.message}>
-        <FileInput id="image" accept="image/*" {...register("image")}/>
+        <FileInput
+          id="image"
+          accept="image/*"
+          {...register("image", {
+            required: isEditSession ? false : "Trường ảnh là bắt buộc",
+          })}
+        />
       </FormRow>
 
       <FormRow>
         <Button variation="secondary" type="reset">
-          Hủy 
+          Hủy
         </Button>
-        <Button disabled={isCreating || Object.keys(errors).length > 0}>Lưu</Button>
+        <Button disabled={isWorking}>Lưu</Button>
       </FormRow>
     </Form>
   );

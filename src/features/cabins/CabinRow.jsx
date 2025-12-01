@@ -1,8 +1,11 @@
 import styled from "styled-components";
+import { useState } from "react";
 import { formatCurrency } from "../../utils/helpers";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCarbin } from "../../services/apiCabins";
-import toast from "react-hot-toast";
+import CreateCabinForm from "./CreateCabinForm";
+import useDeleteCabin from "./useDeleteCabin";
+import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
+import useCreateCabin from "./useCreateCabin";
+
 const TableRow = styled.div`
   display: grid;
   grid-template-columns: 0.6fr 1.8fr 2.2fr 1fr 1fr 1fr;
@@ -43,6 +46,7 @@ const Discount = styled.div`
 `;
 
 function CabinRow({ carbin }) {
+  const [showForm, setShowForm] = useState(false);
   const {
     id: carbinId,
     name,
@@ -53,28 +57,44 @@ function CabinRow({ carbin }) {
     image,
   } = carbin;
 
-  const queryClient = useQueryClient();
+  const { isDeletingCarbin, deleteCabin } = useDeleteCabin();
+  const { isCreating, creatCabin } = useCreateCabin();
 
-  const { isPending : isDeletingCarbin, mutate } = useMutation({
-    mutationFn: (id) => deleteCarbin(id),
-    onSuccess: () => {
-      toast.success('Carbin đã xóa thành công')
-      queryClient.invalidateQueries({
-        queryKey: ['carbins']
-      })
-    },
-    onError: (err) => toast.error(err.message)
-  });
-  
+  function handleDuplicate(params) {
+    creatCabin({
+      name: `Nhân bản cabin ${name}`,
+      maxCapacity,
+      regularPrice,
+      discount,
+      description,
+      image,
+    })
+  }
   return (
-    <TableRow role="row">
-      <Img src={image} />
-      <Cabin>{name}</Cabin>
-      <div>Phù hợp với tối đa {maxCapacity} khách</div>
-      <Price>{formatCurrency(regularPrice)}</Price>
-      <Discount>{formatCurrency(discount)}</Discount>
-      <button onClick={() => mutate(carbinId)} disabled={isDeletingCarbin}>Xóa</button>
-    </TableRow>
+    <>
+      <TableRow role="row">
+        <Img src={image} />
+        <Cabin>{name}</Cabin>
+        <div>Phù hợp với tối đa {maxCapacity} khách</div>
+        <Price>{formatCurrency(regularPrice)}</Price>
+        <Discount>{formatCurrency(discount)}</Discount>
+        <div>
+          <button disabled={isCreating} onClick={handleDuplicate}>
+            <HiSquare2Stack />
+          </button>
+          <button onClick={() => setShowForm((show) => !show)}>
+            <HiPencil />
+          </button>
+          <button
+            onClick={() => deleteCabin(carbinId)}
+            disabled={isDeletingCarbin}
+          >
+            <HiTrash />
+          </button>
+        </div>
+      </TableRow>
+      {showForm && <CreateCabinForm cabinToEdit={carbin} />}
+    </>
   );
 }
 
