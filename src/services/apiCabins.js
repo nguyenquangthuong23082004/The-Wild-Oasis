@@ -11,6 +11,54 @@ export async function getCabins() {
   return cabins;
 }
 
+export async function createEditCarbin(newCarbin, id) {
+  const hasImagePath = newCarbin.image?.startsWith?.(SUPABASE_URL)
+  
+  const imageName =`${Math.random()}-${newCarbin.image.name}`.replaceAll(
+    "/",
+    ""
+  );
+  const imagePath = hasImagePath ? newCarbin.image :  `${SUPABASE_URL}/${SUPABASE_BUCKET_PATH}/${imageName}`;
+
+  // create edit
+  let query = supabase.from("cabins");
+
+  //A CREATE
+  if (!id) {
+    query = query.insert([{ ...newCarbin, image: imagePath }]);
+  } 
+  
+  if (id) {
+    query = query.update({ ...newCarbin, image: imagePath }).eq("id", id);
+  }
+
+  const { data, error } = await query.select().single();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Carbin không thể tạo mới");
+  }
+
+  if (hasImagePath) return data;
+
+  // upload image
+  const { error: storageError } = await supabase.storage
+    .from("cabin-images")
+    .upload(imageName, newCarbin.image, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+    
+  // delete carbin if there was an error uploading image
+  if (storageError) {
+    await supabase.from("cabins").delete().eq("id", data.id);
+    console.error(storageError);
+    throw new Error("Ảnh Carbin không thể tải trong quá khi tạo mới");
+  }
+
+  return data;
+}
+
 export async function createCarbin(newCarbin) {
   const imageName = `${Math.random()}-${newCarbin.image.name}`.replaceAll(
     "/",
@@ -36,7 +84,7 @@ export async function createCarbin(newCarbin) {
       cacheControl: "3600",
       upsert: false,
     });
-  
+
   // delete carbin if there was an error uploading image
   if (storageError) {
     await supabase.from("cabins").delete().eq("id", data.id);
@@ -46,7 +94,6 @@ export async function createCarbin(newCarbin) {
 
   return data;
 }
-
 export async function deleteCarbin(id) {
   const { data, error } = await supabase.from("cabins").delete().eq("id", id);
 
