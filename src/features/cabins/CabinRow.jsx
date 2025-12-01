@@ -1,10 +1,9 @@
 import styled from "styled-components";
-import { formatCurrency } from "../../utils/helpers";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCarbin } from "../../services/apiCabins";
-import toast from "react-hot-toast";
-import CreateCabinForm from "./CreateCabinForm";
 import { useState } from "react";
+import { formatCurrency } from "../../utils/helpers";
+import CreateCabinForm from "./CreateCabinForm";
+import useDeleteCabin from "./useDeleteCabin";
+
 const TableRow = styled.div`
   display: grid;
   grid-template-columns: 0.6fr 1.8fr 2.2fr 1fr 1fr 1fr;
@@ -45,7 +44,7 @@ const Discount = styled.div`
 `;
 
 function CabinRow({ carbin }) {
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(false);
   const {
     id: carbinId,
     name,
@@ -56,18 +55,7 @@ function CabinRow({ carbin }) {
     image,
   } = carbin;
 
-  const queryClient = useQueryClient();
-
-  const { isPending: isDeletingCarbin, mutate } = useMutation({
-    mutationFn: (id) => deleteCarbin(id),
-    onSuccess: () => {
-      toast.success("Carbin đã xóa thành công");
-      queryClient.invalidateQueries({
-        queryKey: ["carbins"],
-      });
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const { isDeletingCarbin, deleteCabin } = useDeleteCabin();
 
   return (
     <>
@@ -79,12 +67,15 @@ function CabinRow({ carbin }) {
         <Discount>{formatCurrency(discount)}</Discount>
         <div>
           <button onClick={() => setShowForm((show) => !show)}>Sửa</button>
-          <button onClick={() => mutate(carbinId)} disabled={isDeletingCarbin}>
+          <button
+            onClick={() => deleteCabin(carbinId)}
+            disabled={isDeletingCarbin}
+          >
             Xóa
           </button>
         </div>
       </TableRow>
-      {showForm && <CreateCabinForm cabinToEdit = {carbin}/>}
+      {showForm && <CreateCabinForm cabinToEdit={carbin} />}
     </>
   );
 }
