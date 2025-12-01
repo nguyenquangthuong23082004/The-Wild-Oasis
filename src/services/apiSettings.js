@@ -21,7 +21,7 @@ export async function updateSetting(newSetting) {
 
   if (error) {
     console.error(error);
-    throw new Error("Settings could not be updated");
+    throw new Error("Không thể cập nhật cấu hình");
   }
   return data;
 }
