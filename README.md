@@ -68,10 +68,11 @@ npm run build
 
 - [x] Khởi tạo project (base scaffold)
 - [x] Thiết kế UI cơ bản
+- [x] Tích hợp React Query
 - [x] Tạo modules cabins
 - [x] Tạo modules settings
+- [x] Sử dụng pattern Compound Component
 - [ ] Tạo modules bookings
-- [ ] Tích hợp React Query
 - [ ] Tối ưu performance
 
 ## 📄 Ghi chú
