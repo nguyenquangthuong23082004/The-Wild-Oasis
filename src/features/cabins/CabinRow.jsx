@@ -95,12 +95,12 @@ function CabinRow({ carbin }) {
           </Modal>
 
           <Modal>
-            <Modal.Open>
+            <Modal.Open opens={'cabin-delete-form'}>
                 <button>
                   <HiTrash />
                 </button>
             </Modal.Open>
-            <Modal.Window >
+            <Modal.Window name={'cabin-delete-form'}>
               <ConfirmDelete resourceName={'cabins'} disabled={isDeletingCarbin} onConfirm={() => deleteCabin(carbinId)}></ConfirmDelete>
             </Modal.Window>
           </Modal>
